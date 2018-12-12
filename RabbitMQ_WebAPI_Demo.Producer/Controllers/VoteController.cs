@@ -17,12 +17,18 @@ namespace RabbitMQ_WebAPI_Demo.Producer.Controllers
         // POST api/values
         public HttpResponseMessage Post([FromBody]Vote vote)
         {
+            if (vote != null)
+            {
+                //Process incoming message using RabbitMQ wrapper class
+                MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+                MessageProcessor.ProduceMessage<Vote>(vote);
 
-            //Process incoming message using RabbitMQ wrapper class
-            MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
-            MessageProcessor.ProduceMessage<Vote>(vote);
+                return Request.CreateResponse(HttpStatusCode.Created);
+            }
+            else {
+                return Request.CreateErrorResponse(HttpStatusCode.InternalServerError, "");
+            }
 
-            return Request.CreateResponse(HttpStatusCode.Created);
         }
 
     }

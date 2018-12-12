@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RabbitMQ_WebAPI_Demo.Messages;
+using System;
 
 namespace RabbitMQ_WebAPI_Demo.Consumer
 {
@@ -15,9 +16,24 @@ namespace RabbitMQ_WebAPI_Demo.Consumer
         {
             Console.WriteLine("Waiting for incoming messages, Queue[{0}], Press Ctrl + C to exit...", QueueName);
 
-            //Process incoming message using RabbitMQ wrapper class
-            MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
-            MessageProcessor.ConsumeMessages();
+            try
+            {
+                //Process incoming message using RabbitMQ wrapper class - Read Vote Messages
+                MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+                MessageProcessor.ConsumeMessages<Vote>(msg => {
+                    Console.WriteLine($"Vote Received at { DateTime.Now.ToString() }: " +
+                        $"{{ \"VoteId\": \"{ msg.VoteId }\", " +
+                        $"\"DogName\": \"{ msg.DogName }\", " +
+                        $"\"UserId\": \"{ msg.UserId }\"}}");
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ERROR: " + ex.Message);
+            }
+
+            Console.WriteLine("\n\nPress any key to continue...");
+            Console.ReadKey();
 
         }
     }

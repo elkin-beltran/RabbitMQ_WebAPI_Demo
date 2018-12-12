@@ -25,21 +25,23 @@ namespace RabbitMQ_WebAPI_Demo
             }
         }
 
-        private static byte[] GetMessageByteArray<T>(T message)
+        private static byte[] GetMessageAsByteArray<T>(T message)
         {
             // Get message body from T
-            String messageToSend = JsonConvert.SerializeObject(message);
+            string messageToSend = JsonConvert.SerializeObject(message);
             var body = Encoding.UTF8.GetBytes(messageToSend);
 
             return body;
         }
 
-        private static String GetMessageString(BasicDeliverEventArgs ea)
+        private static T GetMessageAsObject<T>(BasicDeliverEventArgs ea)
         {
             var bodyMesage = ea.Body;
             var message = Encoding.UTF8.GetString(bodyMesage);
 
-            return message;
+            var messageObject = JsonConvert.DeserializeObject<T>(message);
+
+            return messageObject;
         }
 
         public static void SetConfig(string _QueueName, string _RabbitMQServer, int _RabbitMQPort, string _RabbitMQUsername, string _RabbitMQPassword)
@@ -49,6 +51,11 @@ namespace RabbitMQ_WebAPI_Demo
             RabbitMQPort = _RabbitMQPort;
             RabbitMQUsername = _RabbitMQUsername;
             RabbitMQPassword = _RabbitMQPassword;
+        }
+
+        public static void Disconnect()
+        {
+            factory = null;
         }
 
         public static bool ProduceMessage<T>(T message)
@@ -68,7 +75,7 @@ namespace RabbitMQ_WebAPI_Demo
                         channel.QueueDeclare(QueueName, false, false, false, null);
 
                         // Publish / Send simple message to queue
-                        channel.BasicPublish("", QueueName, null, GetMessageByteArray(message));
+                        channel.BasicPublish("", QueueName, null, GetMessageAsByteArray(message));
                     }
                 }
                 retVal = true;
@@ -82,7 +89,7 @@ namespace RabbitMQ_WebAPI_Demo
 
         }
 
-        public static void ConsumeMessages()
+        public static void ConsumeMessages<T>(Action<T> outputFunction = null)
         {
 
             try
@@ -101,10 +108,10 @@ namespace RabbitMQ_WebAPI_Demo
                         // Wait for incoming messages
                         while (true)
                         {
-                            var ea = consumer.Queue.Dequeue();
-                            var message = GetMessageString(ea);
+                            var ea = consumer.Queue.Dequeue();                            
+                            var messageObject = GetMessageAsObject<T>(ea);
 
-                            Console.WriteLine($"Vote Received at { DateTime.Now.ToString() }: {message}");
+                            outputFunction(messageObject);
                         }
 
                     }
@@ -113,7 +120,7 @@ namespace RabbitMQ_WebAPI_Demo
             }
             catch (Exception)
             {
-                throw new Exception("Error found while reading messages from Queue");
+                throw new Exception("Error found while reading messages from Queue!!!");
             }
 
         }
