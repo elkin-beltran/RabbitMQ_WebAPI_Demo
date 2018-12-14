@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -15,6 +17,12 @@ namespace RabbitMQ_WebAPI_Demo
         private static string RabbitMQUsername;
         private static string RabbitMQPassword;
         private static ConnectionFactory factory = null;
+        private static string MongoDBUrl = null;
+        private static string MongoDBDatabaseName = null;
+        private static string MongoDBCollectionName = null;
+        private static IMongoClient client;
+        private static IMongoDatabase database;
+        private static IMongoCollection<BsonDocument> collection;
 
         private static void BuildConnection()
         {
@@ -22,6 +30,24 @@ namespace RabbitMQ_WebAPI_Demo
             {
                 // Set configuration to connect to RabbitMQ Server
                 factory = new ConnectionFactory() { HostName = RabbitMQServer, Port = RabbitMQPort, UserName = RabbitMQUsername, Password = RabbitMQPassword };
+
+                if (!string.IsNullOrEmpty(MongoDBUrl) && 
+                    !string.IsNullOrEmpty(MongoDBDatabaseName) && 
+                    !string.IsNullOrEmpty(MongoDBCollectionName)) {
+
+                    try
+                    {
+                        //Set Connection to MongoDB
+                        client = new MongoClient(MongoDBUrl);
+                        database = client.GetDatabase(MongoDBDatabaseName);
+                        collection = database.GetCollection<BsonDocument>(MongoDBCollectionName);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+
+                }
             }
         }
 
@@ -44,13 +70,20 @@ namespace RabbitMQ_WebAPI_Demo
             return messageObject;
         }
 
-        public static void SetConfig(string _QueueName, string _RabbitMQServer, int _RabbitMQPort, string _RabbitMQUsername, string _RabbitMQPassword)
+        public static void SetRabbitMQConfig(string _QueueName, string _RabbitMQServer, int _RabbitMQPort, string _RabbitMQUsername, string _RabbitMQPassword)
         {
             QueueName = _QueueName;
             RabbitMQServer = _RabbitMQServer;
             RabbitMQPort = _RabbitMQPort;
             RabbitMQUsername = _RabbitMQUsername;
             RabbitMQPassword = _RabbitMQPassword;
+        }
+
+        public static void SetDBConfig(string _MongoDBUrl,string _MongoDBDatabaseName, string _MongoDBCollectionName)
+        {
+            MongoDBUrl = _MongoDBUrl;
+            MongoDBDatabaseName = _MongoDBDatabaseName;
+            MongoDBCollectionName = _MongoDBCollectionName;
         }
 
         public static void Disconnect()
@@ -112,6 +145,12 @@ namespace RabbitMQ_WebAPI_Demo
                             var messageObject = GetMessageAsObject<T>(ea);
 
                             outputFunction(messageObject);
+
+                            //Insert T into MongoDB
+                            if (client != null)
+                            {
+                                collection.InsertOne(new BsonDocument { { "Datetime", DateTime.Now.ToString() } }.AddRange(messageObject.ToBsonDocument<T>()));
+                            }
                         }
 
                     }

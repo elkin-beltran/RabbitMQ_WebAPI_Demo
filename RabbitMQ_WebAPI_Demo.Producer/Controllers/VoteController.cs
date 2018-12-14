@@ -20,7 +20,7 @@ namespace RabbitMQ_WebAPI_Demo.Producer.Controllers
             if (vote != null)
             {
                 //Process incoming message using RabbitMQ wrapper class
-                MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+                MessageProcessor.SetRabbitMQConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
                 MessageProcessor.ProduceMessage<Vote>(vote);
 
                 return Request.CreateResponse(HttpStatusCode.Created);

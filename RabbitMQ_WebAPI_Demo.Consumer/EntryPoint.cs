@@ -11,6 +11,9 @@ namespace RabbitMQ_WebAPI_Demo.Consumer
         private static readonly int RabbitMQPort = 5672;
         private static readonly string RabbitMQUsername = "admin";
         private static readonly string RabbitMQPassword = "admin";
+        private static readonly string MongoDBUrl = "mongodb://localhost:27017/" + MongoDBDatabaseName;
+        private static readonly string MongoDBDatabaseName = "test-db";
+        private static readonly string MongoDBCollectionName = "schema1";
 
         static void Main(string[] args)
         {
@@ -18,14 +21,17 @@ namespace RabbitMQ_WebAPI_Demo.Consumer
 
             try
             {
-                //Process incoming message using RabbitMQ wrapper class - Read Vote Messages
-                MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
-                MessageProcessor.ConsumeMessages<Vote>(msg => {
+                // Process incoming message using RabbitMQ wrapper class - Read Vote Messages
+                // Insert into MongoDB Database
+                MessageProcessor.SetRabbitMQConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+                MessageProcessor.SetDBConfig(MongoDBUrl,MongoDBDatabaseName, MongoDBCollectionName);
+                MessageProcessor.ConsumeMessages<Vote>(
+                    msg => {
                     Console.WriteLine($"Vote Received at { DateTime.Now.ToString() }: " +
                         $"{{ \"VoteId\": \"{ msg.VoteId }\", " +
                         $"\"DogName\": \"{ msg.DogName }\", " +
                         $"\"UserId\": \"{ msg.UserId }\"}}");
-                });
+                    });
             }
             catch (Exception ex)
             {

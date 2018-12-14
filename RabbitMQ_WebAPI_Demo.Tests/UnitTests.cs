@@ -31,7 +31,7 @@ namespace RabbitMQ_WebAPI_Demo.Tests
 
             //// Act
             MessageProcessor.Disconnect();
-            MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+            MessageProcessor.SetRabbitMQConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
             var result = MessageProcessor.ProduceMessage<Vote>(vote);
 
             //// Assert
@@ -47,7 +47,7 @@ namespace RabbitMQ_WebAPI_Demo.Tests
 
             //// Act
             MessageProcessor.Disconnect();
-            MessageProcessor.SetConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
+            MessageProcessor.SetRabbitMQConfig(QueueName, RabbitMQServer, RabbitMQPort, RabbitMQUsername, RabbitMQPassword);
             var result = MessageProcessor.ProduceMessage<Vote>(vote);
 
             //// Assert
